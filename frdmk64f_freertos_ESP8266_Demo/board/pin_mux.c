@@ -46,11 +46,20 @@ processor_version: 2.0.0
 #include "fsl_common.h"
 #include "fsl_port.h"
 #include "pin_mux.h"
+#include "board.h"
 
+#define PIN10_IDX                       10u   /*!< Pin number for pin 10 in a port */
 
+#define PIN11_IDX                       11u   /*!< Pin number for pin 11 in a port */
 
 #define PIN16_IDX                       16u   /*!< Pin number for pin 16 in a port */
+
 #define PIN17_IDX                       17u   /*!< Pin number for pin 17 in a port */
+
+#define PIN24_IDX                       24u   /*!< Pin number for pin 24 in a port */
+
+#define PIN25_IDX                       25u   /*!< Pin number for pin 25 in a port */
+
 #define SOPT5_UART0TXSRC_UART_TX      0x00u   /*!< UART 0 transmit data source select: UART0_TX pin */
 
 /*
@@ -71,6 +80,12 @@ BOARD_InitPins:
  *END**************************************************************************/
 void BOARD_InitPins(void) {
   CLOCK_EnableClock(kCLOCK_PortB);                           /* Port B Clock Gate Control: Clock enabled */
+  CLOCK_EnableClock(kCLOCK_PortC);                           /* Port C Clock Gate Control: Clock enabled */
+  CLOCK_EnableClock(kCLOCK_PortE);                           /* Port E Clock Gate Control: Clock enabled */
+
+#ifdef FRDM_K64F_REVD1
+    CLOCK_EnableClock(kCLOCK_PortA); //LEGS- Enable the PORTA for the FRDM-K64F Rev-D1. To use PTA0 for OM5578 baord.
+#endif
 
   PORT_SetPinMux(PORTB, PIN16_IDX, kPORT_MuxAlt3);           /* PORTB16 (pin 62) is configured as UART0_RX */
   PORT_SetPinMux(PORTB, PIN17_IDX, kPORT_MuxAlt3);           /* PORTB17 (pin 63) is configured as UART0_TX */
@@ -80,11 +95,60 @@ void BOARD_InitPins(void) {
     );
 
   // UART3 for ESP8266 module
-  CLOCK_EnableClock(kCLOCK_PortC);                           /* Port C Clock Gate Control: Clock enabled */
-
   PORT_SetPinMux(PORTC, PIN16_IDX, kPORT_MuxAlt3);           /* PORTC16 is configured as UART3_RX */
   PORT_SetPinMux(PORTC, PIN17_IDX, kPORT_MuxAlt3);           /* PORTC17 is configured as UART3_TX */
+
+  const port_pin_config_t portc10_pin82_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainEnable,                                   /* Open drain is enabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt2,                                           /* Pin is configured as I2C1_SCL */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTC, PIN10_IDX, &portc10_pin82_config); /* PORTC10 (pin 82) is configured as I2C1_SCL */
+  const port_pin_config_t portc11_pin83_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainEnable,                                   /* Open drain is enabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt2,                                           /* Pin is configured as I2C1_SDA */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTC, PIN11_IDX, &portc11_pin83_config); /* PORTC11 (pin 83) is configured as I2C1_SDA */
+  const port_pin_config_t porte24_pin31_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainEnable,                                   /* Open drain is enabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt5,                                           /* Pin is configured as I2C0_SCL */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTE, PIN24_IDX, &porte24_pin31_config); /* PORTE24 (pin 31) is configured as I2C0_SCL */
+  const port_pin_config_t porte25_pin32_config = {
+    kPORT_PullUp,                                            /* Internal pull-up resistor is enabled */
+    kPORT_FastSlewRate,                                      /* Fast slew rate is configured */
+    kPORT_PassiveFilterDisable,                              /* Passive filter is disabled */
+    kPORT_OpenDrainEnable,                                   /* Open drain is enabled */
+    kPORT_LowDriveStrength,                                  /* Low drive strength is configured */
+    kPORT_MuxAlt5,                                           /* Pin is configured as I2C0_SDA */
+    kPORT_UnlockRegister                                     /* Pin Control Register fields [15:0] are not locked */
+  };
+  PORT_SetPinConfig(PORTE, PIN25_IDX, &porte25_pin32_config); /* PORTE25 (pin 32) is configured as I2C0_SDA */
+
+  /* Initialize NXPNCI GPIO pins below */
+  /* IRQ and VEN PIN_MUX Configuration */
+  PORT_SetPinMux(NXPNCI_IRQ_PORT, NXPNCI_IRQ_PIN, kPORT_MuxAsGpio);
+  PORT_SetPinMux(NXPNCI_VEN_PORT, NXPNCI_VEN_PIN, kPORT_MuxAsGpio);
+  /* IRQ interrupt Configuration */
+  NVIC_SetPriority(NXPNCI_IRQ_PORTIRQn, 5);
+  EnableIRQ(NXPNCI_IRQ_PORTIRQn);
+  PORT_SetPinInterruptConfig(NXPNCI_IRQ_PORT, NXPNCI_IRQ_PIN, kPORT_InterruptRisingEdge);
 }
+
 
 /*******************************************************************************
  * EOF

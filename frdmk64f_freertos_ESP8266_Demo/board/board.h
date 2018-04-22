@@ -174,6 +174,25 @@
 
 #define BOARD_ACCEL_I2C_BASEADDR I2C0
 
+/* NXPNCI NFC related declaration */
+#define NXPNCI_I2C_INSTANCE         I2C0
+#define NXPNCI_I2C_BAUDRATE         (100000)
+#define NXPNCI_I2C_ADDR             (0x28)
+#ifdef FRDM_K64F_REVD1
+    #define NXPNCI_IRQ_PORTIRQn         PORTA_IRQn
+    #define NXPNCI_IRQ_GPIO             (GPIOA)
+    #define NXPNCI_IRQ_PORT             (PORTA)
+    #define NXPNCI_IRQ_PIN              (0U)
+#else
+    #define NXPNCI_IRQ_PORTIRQn         PORTC_IRQn
+    #define NXPNCI_IRQ_GPIO             (GPIOC)
+    #define NXPNCI_IRQ_PORT             (PORTC)
+    #define NXPNCI_IRQ_PIN              (12U)
+#endif
+#define NXPNCI_VEN_GPIO             (GPIOC)
+#define NXPNCI_VEN_PORT             (PORTC)
+#define NXPNCI_VEN_PIN              (3U)
+
 /* ERPC DSPI configuration */
 #define ERPC_BOARD_DSPI_BASEADDR SPI0
 #define ERPC_BOARD_DSPI_BAUDRATE 500000U

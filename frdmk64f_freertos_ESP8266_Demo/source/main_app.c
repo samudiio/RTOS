@@ -37,6 +37,7 @@
 #include "task.h"
 #include "queue.h"
 #include "timers.h"
+#include <nfc_task.h>
 
 /* Freescale includes. */
 #include "fsl_device_registers.h"
@@ -60,6 +61,9 @@ ConfigTag_t ConfigInfo =
 		.ServerHostName = {0},
 		.ServerIP = {0},
 };
+
+#define TASK_NFC_STACK_SIZE     1024
+#define TASK_NFC_STACK_PRIO     (configMAX_PRIORITIES - 1)
 
 /* UART instance and clock */
 #define UART_RX_TX_IRQn UART0_RX_TX_IRQn
@@ -89,9 +93,10 @@ int main(void)
 
     /* Init board hardware. */
     BOARD_InitPins();
-    BOARD_BootClockRUN();
+	BOARD_BootClockRUN();
     BOARD_InitDebugConsole();
 
+    printf("NXP-NFC + Wifi project.\n\r");
     //NVIC_SetPriority(UART_RX_TX_IRQn, 5);
 
     UART_GetDefaultConfig(&config);
@@ -101,11 +106,19 @@ int main(void)
 
     UART_Init(UART3, &config, CLOCK_GetFreq(UART3_CLK_SRC));
 
+    /* Create NFC task */
+    if (xTaskCreate((TaskFunction_t) task_nfc, (const char*) "NFC_task", TASK_NFC_STACK_SIZE, NULL, TASK_NFC_STACK_PRIO, NULL) != pdPASS)
+    {
+        printf("Failed to create NFC task");
+    }
+
+    /* Create Wifi task*/
     xTaskCreate(wifi_task, "wifi_task", configMINIMAL_STACK_SIZE + 100, NULL, wifi_task_PRIORITY, NULL);
 
     vTaskStartScheduler();
-    for (;;)
-        ;
+    while(1);
+
+    return 0;
 }
 
 static void wifi_task(void *pvParameters)
